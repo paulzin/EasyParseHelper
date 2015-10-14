@@ -5,11 +5,11 @@ question_title = "Запитання"
 
 
 class Question:
-    def __init__(self, title, question=None, correct_answers_list=[], answers_list=[]):
+    def __init__(self, title, question=None, correct_answers_list=None, wrong_answers_list=None):
         self.title = title
         self.question = question
         self.correct_answers_list = correct_answers_list
-        self.answers_list = answers_list
+        self.wrong_answers_list = wrong_answers_list
 
 
 class ParseHelper:
@@ -25,35 +25,47 @@ class ParseHelper:
             if paragraph.text.startswith(question_title):
                 paragraph_text = paragraph.text
                 question = Question(title=paragraph_text)
+                correct_answers = []
+                wrong_answers = []
                 paragraph_index = 0
+
                 while paragraph_text != "\n\n":
                     try:
                         iterator = next(paragraphs_iter)
+                        paragraph_text = iterator.text
 
                         if not iterator.runs:
                             continue
 
+                        if paragraph_index == 0:
+                            paragraph_index += 1
+
                         if paragraph_index == 1:
                             question.question = paragraph_text
-
-                        #print(paragraph_text)
+                            paragraph_index += 1
+                            continue
 
                         if iterator.runs[0].bold:
-                            # question.correct_answers_list.append(iterator.text)
-                            paragraph_text = "*** " + iterator.text + " ***"
+                            correct_answers.append(iterator.text)
                         else:
-                            # question.answers_list.append(iterator.text)
-                            paragraph_text = iterator.text
+                            if iterator.text != "\n\n":
+                                wrong_answers.append(iterator.text)
+
+                        paragraph_text = iterator.text
 
                         paragraph_index += 1
                     except StopIteration:
                         break
+
+                question.wrong_answers_list = wrong_answers
+                question.correct_answers_list = correct_answers
                 questions.append(question)
-                #print("\n\n")
                 continue
 
         for item in questions:
-            print(item.title + "\n" + item.question + "\n\n")
+            print(item.title + "\n" + item.question + "\n" +
+                  "WRONG: " + str(item.wrong_answers_list) + "\n" +
+                  "CORRECT: " + str(item.correct_answers_list) + "\n\n")
 
 
 parse_helper = ParseHelper(file_path)
