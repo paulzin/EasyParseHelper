@@ -1,6 +1,7 @@
 from docx import Document
 
-file_path = 'input/module1.docx'
+file_path_1 = 'input/module1.docx'
+file_path_2 = 'input/module1_305.docx'
 question_title = "Запитання"
 
 
@@ -68,4 +69,5 @@ class ParseHelper:
                   "CORRECT: " + str(item.correct_answers_list) + "\n\n")
 
 
-parse_helper = ParseHelper(file_path)
+# FIXME: file_path_2 parsing is not correct and it won't work
+ParseHelper(file_path_1)
