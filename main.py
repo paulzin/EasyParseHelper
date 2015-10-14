@@ -60,7 +60,8 @@ class ParseHelper:
 
                 question.wrong_answers_list = wrong_answers
                 question.correct_answers_list = correct_answers
-                questions.append(question)
+                if correct_answers:
+                    questions.append(question)
                 continue
 
         for item in questions:
