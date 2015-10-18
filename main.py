@@ -1,4 +1,5 @@
 from docx import Document
+import json
 
 file_path_1 = 'input/module1.docx'
 file_path_2 = 'input/module1_305.docx'
@@ -16,9 +17,9 @@ class Question:
 class ParseHelper:
     def __init__(self, document_path):
         self.document_path = document_path
-        self.parse_doc()
 
     def parse_doc(self):
+        paragraph_divider = "\n\n" if self.document_path == file_path_1 else "\n"
         questions = []
         document = Document(self.document_path)
         paragraphs_iter = iter(document.paragraphs)
@@ -30,7 +31,7 @@ class ParseHelper:
                 wrong_answers = []
                 paragraph_index = 0
 
-                while paragraph_text != "\n\n":
+                while paragraph_text != paragraph_divider:
                     try:
                         iterator = next(paragraphs_iter)
                         paragraph_text = iterator.text
@@ -48,8 +49,9 @@ class ParseHelper:
 
                         if iterator.runs[0].bold:
                             correct_answers.append(iterator.text)
+                            wrong_answers.append(iterator.text)
                         else:
-                            if iterator.text != "\n\n":
+                            if iterator.text != paragraph_divider:
                                 wrong_answers.append(iterator.text)
 
                         paragraph_text = iterator.text
@@ -64,11 +66,40 @@ class ParseHelper:
                     questions.append(question)
                 continue
 
-        for item in questions:
-            print(item.title + "\n" + item.question + "\n" +
-                  "WRONG: " + str(item.wrong_answers_list) + "\n" +
-                  "CORRECT: " + str(item.correct_answers_list) + "\n\n")
+        return questions
 
 
-# FIXME: file_path_2 parsing is not correct and it won't work
-ParseHelper(file_path_1)
+class JsonMaker:
+    default_file_name = 'result.json'
+
+    def __init__(self, objects, result_file_name=default_file_name):
+        self.objects = objects
+        self.result_file_name = result_file_name
+
+    def get_json_array(self):
+        json_array = []
+        for item in self.objects:
+            json_array.append({'question': item.question,
+                               'answer': item.correct_answers_list[0],
+                               'answers': item.wrong_answers_list
+                               }
+                              )
+
+        return json_array
+
+    def make_json_file(self):
+        with open(self.result_file_name, 'w') as fp:
+            json.dump(self.get_json_array(), fp=fp, indent=4, ensure_ascii=False)
+            print('Successfully created ' + fp.name)
+
+
+helper = ParseHelper(file_path_1)
+questions_list_one = helper.parse_doc()
+
+helper = ParseHelper(file_path_2)
+questions_list_two = helper.parse_doc()
+
+all_questions = questions_list_one + questions_list_two
+
+json_maker = JsonMaker(all_questions)
+json_maker.make_json_file()
